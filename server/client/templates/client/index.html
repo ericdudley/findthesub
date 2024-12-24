@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            background: #f6f7f8;
+            font-family: Verdana, sans-serif;
+            color: #1c1c1c;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #cee3f8;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #1c1c1c;
+            font-size: 1.5em;
+        }
+
+        .buy-me-coffee {
+            margin-top: 10px;
+        }
+
+        .buy-me-coffee img {
+            height: 40px;
+            width: auto;
+        }
+
+        .container {
+            margin: 20px auto;
+            max-width: 1200px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        input[type=text] {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 1.5rem;
+        }
+
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .sections {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .sections>div {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            background: #f6f7f8;
+            margin-bottom: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .placeholder,
+        .loading,
+        .error {
+            color: #555;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .error {
+            color: red;
+            font-style: normal;
+        }
+
+        .progress {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 4px;
+            height: 1em;
+            margin: 5px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            background-color: #95c3f8;
+            height: 100%;
+            border-radius: 4px;
+            width: 0;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 5px;
+            box-sizing: border-box;
+            color: #000;
+            font-size: 0.8em;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .show-more-container {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .buy-me-coffee {
+                align-self: flex-end;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <div class="buy-me-coffee">
+            <a href="https://www.buymeacoffee.com/ericdudley" target="_blank">
+                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" />
+            </a>
+        </div>
+    </div>
+    <div class="container">
+        <p>Enter a Reddit post title below, and we'll determine which of the top subreddits are the best match.</p>
+        <input id="queryInput" type="text" placeholder="Why did I get laid off right before the holidays?" />
+        <div id="placeholder" class="placeholder">Please enter a query to see results.</div>
+        <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
+        <div id="errorIndicator" class="error" style="display:none;"></div>
+        <div class="sections">
+            <div id="mostSimilarSection" style="display: none;">
+                <h2>Most similar subreddits</h2>
+                <ul id="topSubsList"></ul>
+            </div>
+            <div id="leastSimilarSection" style="display: none;">
+                <h2>Least similar subreddits</h2>
+                <ul id="bottomSubsList"></ul>
+            </div>
+        </div>
+        <div class="show-more-container" style="display: none;">
+            <button id="showMoreButton">Show More</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const throttleDelay = 500; let throttleTimeout;
+            const inputEl = document.getElementById("queryInput");
+            const placeholderEl = document.getElementById("placeholder");
+            const loadingEl = document.getElementById("loadingIndicator");
+            const errorEl = document.getElementById("errorIndicator");
+            const mostSimilarSectionEl = document.getElementById("mostSimilarSection");
+            const leastSimilarSectionEl = document.getElementById("leastSimilarSection");
+            const topSubsListEl = document.getElementById("topSubsList");
+            const bottomSubsListEl = document.getElementById("bottomSubsList");
+            const showMoreButtonEl = document.getElementById("showMoreButton");
+            const showMoreContainerEl = document.querySelector(".show-more-container");
+
+            let topSubs = [], bottomSubs = [];
+            let showAll = false;
+
+            const params = new URLSearchParams(window.location.search);
+            const initialQuery = params.get('q') || '';
+            if (initialQuery) { inputEl.value = initialQuery; doThrottledQuery(); }
+
+            inputEl.addEventListener("input", () => {
+                if (throttleTimeout) clearTimeout(throttleTimeout);
+                throttleTimeout = setTimeout(doThrottledQuery, throttleDelay);
+            });
+
+            showMoreButtonEl.addEventListener('click', () => {
+                showAll = true;
+                renderResults();
+                showMoreContainerEl.style.display = 'none';
+            });
+
+            function doThrottledQuery() {
+                const queryValue = inputEl.value.trim();
+                window.history.replaceState({}, '', '/?q=' + encodeURIComponent(queryValue));
+                hideAllSections();
+                if (!queryValue) {
+                    showPlaceholder("Please enter a query to see results."); return;
+                }
+                showLoading();
+                fetch('/api/?q=' + encodeURIComponent(queryValue))
+                    .then(res => { if (!res.ok) throw new Error(`Request failed: ${res.status}`); return res.json(); })
+                    .then(data => {
+                        hideLoading();
+                        updateResults(data);
+                    })
+                    .catch(err => {
+                        hideLoading();
+                        showError(`Something went wrong: ${err.message}`);
+                        console.error('Error fetching /api/', err);
+                    });
+            }
+
+            function updateResults(data) {
+                topSubs = data.topSubs || [];
+                bottomSubs = data.bottomSubs || [];
+                showAll = false;
+                const allSubs = [...topSubs, ...bottomSubs];
+                if (!allSubs.length) { showPlaceholder("No data found for that query."); return; }
+                renderResults();
+                const moreNeeded = (topSubs.length > 5) || (bottomSubs.length > 5);
+                showMoreContainerEl.style.display = moreNeeded ? 'block' : 'none';
+            }
+
+            function renderResults() {
+                hideAllSections();
+                const allSubs = [...topSubs, ...bottomSubs];
+                const minVal = Math.min(...allSubs.map(s => s.similarities));
+                const maxVal = Math.max(...allSubs.map(s => s.similarities));
+                const range = (maxVal - minVal) || 1;
+
+                if (topSubs.length) {
+                    mostSimilarSectionEl.style.display = 'block';
+                    topSubsListEl.innerHTML = (showAll ? topSubs : topSubs.slice(0, 5)).map(item => {
+                        const widthPercent = ((item.similarities - minVal) / range * 100).toFixed(0);
+                        return `<li><a href="https://reddit.com/r/${item.Sub}" target="_blank">/r/${item.Sub}</a>
+          <div class="progress"><div class="progress-bar" style="width: ${widthPercent}%;">
+            <span>Similarity ${widthPercent}%</span></div></div></li>`;
+                    }).join('');
+                }
+
+                if (bottomSubs.length) {
+                    leastSimilarSectionEl.style.display = 'block';
+                    bottomSubsListEl.innerHTML = (showAll ? bottomSubs : bottomSubs.slice(0, 5)).map(item => {
+                        const widthPercent = ((item.similarities - minVal) / range * 100).toFixed(0);
+                        return `<li><a href="https://reddit.com/r/${item.Sub}" target="_blank">/r/${item.Sub}</a>
+          <div class="progress"><div class="progress-bar" style="width: ${widthPercent}%;">
+            <span>Similarity ${widthPercent}%</span></div></div></li>`;
+                    }).join('');
+                }
+            }
+
+            function hideAllSections() {
+                placeholderEl.style.display = 'none';
+                errorEl.style.display = 'none';
+                mostSimilarSectionEl.style.display = 'none';
+                leastSimilarSectionEl.style.display = 'none';
+                topSubsListEl.innerHTML = '';
+                bottomSubsListEl.innerHTML = '';
+            }
+
+            function showPlaceholder(message) {
+                placeholderEl.textContent = message; placeholderEl.style.display = 'block';
+            }
+            function showLoading() { loadingEl.style.display = 'block'; }
+            function hideLoading() { loadingEl.style.display = 'none'; }
+            function showError(message) { errorEl.textContent = message; errorEl.style.display = 'block'; }
+        })();
+    </script>
+</body>
+
+</html>
