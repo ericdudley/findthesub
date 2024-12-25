@@ -91,6 +91,7 @@ def init_embeddings():
 
         # Load the embeddings DataFrame
         try:
+            print("Loading embeddings from local file...")
             _df = pd.read_pickle(LOCAL_FILE_PATH)
             _initialized = True
             print("Embeddings loaded successfully from S3.")
