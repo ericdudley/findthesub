@@ -7,9 +7,8 @@ import os
 import ast
 import numpy as np
 import boto3
-from embeddings import get_df
+from server.embeddings import get_df
 
-# Load environment variables
 load_dotenv()
 
 # Initialize OpenAI client
