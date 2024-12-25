@@ -6,5 +6,5 @@ class ServerConfig(AppConfig):
     name = 'server'
 
     def ready(self):
-        from embeddings import init_embeddings
+        from server.embeddings import init_embeddings
         init_embeddings()
