@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from dotenv import load_dotenv
 
 
 class ServerConfig(AppConfig):
@@ -6,5 +7,4 @@ class ServerConfig(AppConfig):
     name = 'server'
 
     def ready(self):
-        from server.embeddings import init_embeddings
-        init_embeddings()
+        load_dotenv()

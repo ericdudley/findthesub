@@ -39,10 +39,12 @@
 
         .container {
             margin: 20px auto;
-            max-width: 1200px;
+            max-width: 800px;
             background: #ffffff;
             border: 1px solid #ccc;
             padding: 20px;
+            text-align: center;
+            /* Center everything in the container */
         }
 
         input[type=text] {
@@ -61,20 +63,12 @@
             font-size: 1.2em;
         }
 
-        .sections {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .sections>div {
-            flex: 1;
-            min-width: 400px;
-        }
-
         ul {
             list-style-type: none;
             padding-left: 0;
+            margin: 0 auto;
+            text-align: left;
+            max-width: 600px;
         }
 
         li {
@@ -152,45 +146,43 @@
         </div>
     </div>
     <div class="container">
-        <p>Enter a Reddit post title below, and we'll determine which of the top subreddits are the best match.</p>
+        <p>Enter a Reddit post title below, and we'll determine which subreddits are the best match.</p>
         <input id="queryInput" type="text" placeholder="Why did I get laid off right before the holidays?" />
         <div id="placeholder" class="placeholder">Please enter a query to see results.</div>
         <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
         <div id="errorIndicator" class="error" style="display:none;"></div>
-        <div class="sections">
-            <div id="mostSimilarSection" style="display: none;">
-                <h2>Most similar subreddits</h2>
-                <ul id="topSubsList"></ul>
-            </div>
-            <div id="leastSimilarSection" style="display: none;">
-                <h2>Least similar subreddits</h2>
-                <ul id="bottomSubsList"></ul>
-            </div>
+
+        <div id="similarSubsSection" style="display: none;">
+            <h2>Similar subreddits</h2>
+            <ul id="similarSubsList"></ul>
         </div>
+
         <div class="show-more-container" style="display: none;">
             <button id="showMoreButton">Show More</button>
         </div>
     </div>
     <script>
         (function () {
-            const throttleDelay = 500; let throttleTimeout;
+            const throttleDelay = 500;
+            let throttleTimeout;
             const inputEl = document.getElementById("queryInput");
             const placeholderEl = document.getElementById("placeholder");
             const loadingEl = document.getElementById("loadingIndicator");
             const errorEl = document.getElementById("errorIndicator");
-            const mostSimilarSectionEl = document.getElementById("mostSimilarSection");
-            const leastSimilarSectionEl = document.getElementById("leastSimilarSection");
-            const topSubsListEl = document.getElementById("topSubsList");
-            const bottomSubsListEl = document.getElementById("bottomSubsList");
+            const similarSubsSectionEl = document.getElementById("similarSubsSection");
+            const similarSubsListEl = document.getElementById("similarSubsList");
             const showMoreButtonEl = document.getElementById("showMoreButton");
             const showMoreContainerEl = document.querySelector(".show-more-container");
 
-            let topSubs = [], bottomSubs = [];
+            let zillizResults = [];
             let showAll = false;
 
             const params = new URLSearchParams(window.location.search);
             const initialQuery = params.get('q') || '';
-            if (initialQuery) { inputEl.value = initialQuery; doThrottledQuery(); }
+            if (initialQuery) {
+                inputEl.value = initialQuery;
+                doThrottledQuery();
+            }
 
             inputEl.addEventListener("input", () => {
                 if (throttleTimeout) clearTimeout(throttleTimeout);
@@ -207,12 +199,18 @@
                 const queryValue = inputEl.value.trim();
                 window.history.replaceState({}, '', '/?q=' + encodeURIComponent(queryValue));
                 hideAllSections();
+
                 if (!queryValue) {
-                    showPlaceholder("Please enter a query to see results."); return;
+                    showPlaceholder("Please enter a query to see results.");
+                    return;
                 }
+
                 showLoading();
                 fetch('/api/?q=' + encodeURIComponent(queryValue))
-                    .then(res => { if (!res.ok) throw new Error(`Request failed: ${res.status}`); return res.json(); })
+                    .then(res => {
+                        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+                        return res.json();
+                    })
                     .then(data => {
                         hideLoading();
                         updateResults(data);
@@ -225,59 +223,76 @@
             }
 
             function updateResults(data) {
-                topSubs = data.topSubs || [];
-                bottomSubs = data.bottomSubs || [];
+                // The new field in the response from index is `zillizResults`
+                zillizResults = data.zillizResults || [];
                 showAll = false;
-                const allSubs = [...topSubs, ...bottomSubs];
-                if (!allSubs.length) { showPlaceholder("No data found for that query."); return; }
+
+                if (!zillizResults.length) {
+                    showPlaceholder("No data found for that query.");
+                    return;
+                }
                 renderResults();
-                const moreNeeded = (topSubs.length > 5) || (bottomSubs.length > 5);
+
+                // If you want "Show More" logic
+                const moreNeeded = zillizResults.length > 5;
                 showMoreContainerEl.style.display = moreNeeded ? 'block' : 'none';
             }
 
             function renderResults() {
                 hideAllSections();
-                const allSubs = [...topSubs, ...bottomSubs];
-                const minVal = Math.min(...allSubs.map(s => s.similarities));
-                const maxVal = Math.max(...allSubs.map(s => s.similarities));
+                if (!zillizResults.length) {
+                    showPlaceholder("No data found for that query.");
+                    return;
+                }
+
+                similarSubsSectionEl.style.display = 'block';
+
+                // Compute min, max, and range for distance-based progress bars
+                const minVal = Math.min(...zillizResults.map(s => s.distance));
+                const maxVal = Math.max(...zillizResults.map(s => s.distance));
                 const range = (maxVal - minVal) || 1;
 
-                if (topSubs.length) {
-                    mostSimilarSectionEl.style.display = 'block';
-                    topSubsListEl.innerHTML = (showAll ? topSubs : topSubs.slice(0, 5)).map(item => {
-                        const widthPercent = ((item.similarities - minVal) / range * 100).toFixed(0);
-                        return `<li><a href="https://reddit.com/r/${item.Sub}" target="_blank">/r/${item.Sub}</a>
-          <div class="progress"><div class="progress-bar" style="width: ${widthPercent}%;">
-            <span>Similarity ${widthPercent}%</span></div></div></li>`;
-                    }).join('');
-                }
-
-                if (bottomSubs.length) {
-                    leastSimilarSectionEl.style.display = 'block';
-                    bottomSubsListEl.innerHTML = (showAll ? bottomSubs : bottomSubs.slice(0, 5)).map(item => {
-                        const widthPercent = ((item.similarities - minVal) / range * 100).toFixed(0);
-                        return `<li><a href="https://reddit.com/r/${item.Sub}" target="_blank">/r/${item.Sub}</a>
-          <div class="progress"><div class="progress-bar" style="width: ${widthPercent}%;">
-            <span>Similarity ${widthPercent}%</span></div></div></li>`;
-                    }).join('');
-                }
+                const itemsToRender = showAll ? zillizResults : zillizResults.slice(0, 5);
+                similarSubsListEl.innerHTML = itemsToRender.map(item => {
+                    const widthPercent = ((item.distance - minVal) / range * 100).toFixed(0);
+                    // Link to /r/<sub>
+                    return `
+                        <li>
+                            <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: ${widthPercent}%">
+                                    <span>Distance ${widthPercent}%</span>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
             }
 
             function hideAllSections() {
                 placeholderEl.style.display = 'none';
                 errorEl.style.display = 'none';
-                mostSimilarSectionEl.style.display = 'none';
-                leastSimilarSectionEl.style.display = 'none';
-                topSubsListEl.innerHTML = '';
-                bottomSubsListEl.innerHTML = '';
+                similarSubsSectionEl.style.display = 'none';
+                similarSubsListEl.innerHTML = '';
             }
 
             function showPlaceholder(message) {
-                placeholderEl.textContent = message; placeholderEl.style.display = 'block';
+                placeholderEl.textContent = message;
+                placeholderEl.style.display = 'block';
             }
-            function showLoading() { loadingEl.style.display = 'block'; }
-            function hideLoading() { loadingEl.style.display = 'none'; }
-            function showError(message) { errorEl.textContent = message; errorEl.style.display = 'block'; }
+
+            function showLoading() {
+                loadingEl.style.display = 'block';
+            }
+
+            function hideLoading() {
+                loadingEl.style.display = 'none';
+            }
+
+            function showError(message) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
         })();
     </script>
 </body>
