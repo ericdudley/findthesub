@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <title>{{ title }}</title>
@@ -12,7 +11,6 @@
             margin: 0;
             padding: 0;
         }
-
         .header {
             background: #cee3f8;
             padding: 10px 20px;
@@ -21,22 +19,18 @@
             justify-content: space-between;
             flex-wrap: wrap;
         }
-
         .header h1 {
             margin: 0;
             color: #1c1c1c;
             font-size: 1.5em;
         }
-
         .buy-me-coffee {
             margin-top: 10px;
         }
-
         .buy-me-coffee img {
             height: 40px;
             width: auto;
         }
-
         .container {
             margin: 20px auto;
             max-width: 800px;
@@ -44,9 +38,7 @@
             border: 1px solid #ccc;
             padding: 20px;
             text-align: center;
-            /* Center everything in the container */
         }
-
         input[type=text] {
             display: block;
             width: 100%;
@@ -56,13 +48,11 @@
             box-sizing: border-box;
             font-size: 1.5rem;
         }
-
         h2 {
             margin-top: 30px;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
-
         ul {
             list-style-type: none;
             padding-left: 0;
@@ -70,14 +60,12 @@
             text-align: left;
             max-width: 600px;
         }
-
         li {
-            background: #f6f7f8;
+            background: #fefefe;
             margin-bottom: 5px;
             padding: 8px;
             border: 1px solid #ccc;
         }
-
         .placeholder,
         .loading,
         .error {
@@ -85,57 +73,48 @@
             font-style: italic;
             margin-bottom: 10px;
         }
-
         .error {
             color: red;
             font-style: normal;
         }
-
-        .progress {
-            width: 100%;
-            background-color: #ddd;
-            border-radius: 4px;
-            height: 1em;
-            margin: 5px 0;
-            position: relative;
-        }
-
-        .progress-bar {
-            background-color: #95c3f8;
-            height: 100%;
-            border-radius: 4px;
-            width: 0;
-            transition: width 0.3s;
+        .results-container {
             display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 5px;
-            box-sizing: border-box;
-            color: #000;
-            font-size: 0.8em;
-            white-space: nowrap;
-            overflow: hidden;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
         }
-
+        .results-box {
+            flex: 1 1 300px;
+            min-width: 300px;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            background: #f6f7f8;
+            padding: 10px;
+        }
+        .results-box h2 {
+            text-align: center;
+        }
         .show-more-container {
             text-align: center;
             margin-top: 10px;
         }
-
         @media (max-width: 480px) {
             .header {
                 flex-direction: column;
                 align-items: flex-start;
             }
-
             .buy-me-coffee {
                 align-self: flex-end;
                 margin-top: 10px;
             }
+            .results-container {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
-
 <body>
     <div class="header">
         <h1>{{ title }}</h1>
@@ -152,30 +131,56 @@
         <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
         <div id="errorIndicator" class="error" style="display:none;"></div>
 
-        <div id="similarSubsSection" style="display: none;">
-            <h2>Similar subreddits</h2>
-            <ul id="similarSubsList"></ul>
-        </div>
+        <!-- Container that holds both subreddits and posts -->
+        <div class="results-container" id="resultsContainer" style="display:none;">
+            <!-- Subreddits Section -->
+            <div id="similarSubsSection" class="results-box" style="display:none;">
+                <h2>Similar subreddits</h2>
+                <ul id="similarSubsList"></ul>
+                <div class="show-more-container" style="display:none;">
+                    <button id="showMoreSubsButton">Show More</button>
+                </div>
+            </div>
 
-        <div class="show-more-container" style="display: none;">
-            <button id="showMoreButton">Show More</button>
+            <!-- Posts Section -->
+            <div id="similarPostsSection" class="results-box" style="display:none;">
+                <h2>Similar posts</h2>
+                <ul id="similarPostsList"></ul>
+                <div class="show-more-container" style="display:none;">
+                    <button id="showMorePostsButton">Show More</button>
+                </div>
+            </div>
         </div>
     </div>
+
     <script>
         (function () {
             const throttleDelay = 500;
             let throttleTimeout;
+
             const inputEl = document.getElementById("queryInput");
             const placeholderEl = document.getElementById("placeholder");
             const loadingEl = document.getElementById("loadingIndicator");
             const errorEl = document.getElementById("errorIndicator");
+            
+            const resultsContainerEl = document.getElementById("resultsContainer");
+
+            // Subreddits
             const similarSubsSectionEl = document.getElementById("similarSubsSection");
             const similarSubsListEl = document.getElementById("similarSubsList");
-            const showMoreButtonEl = document.getElementById("showMoreButton");
-            const showMoreContainerEl = document.querySelector(".show-more-container");
+            const showMoreSubsButtonEl = document.getElementById("showMoreSubsButton");
+            const showMoreSubsContainerEl = showMoreSubsButtonEl.parentElement;
 
-            let zillizResults = [];
-            let showAll = false;
+            // Posts
+            const similarPostsSectionEl = document.getElementById("similarPostsSection");
+            const similarPostsListEl = document.getElementById("similarPostsList");
+            const showMorePostsButtonEl = document.getElementById("showMorePostsButton");
+            const showMorePostsContainerEl = showMorePostsButtonEl.parentElement;
+
+            let zillizResults = [];     // For subreddits
+            let allPosts = [];          // For posts
+            let showAllSubs = false;
+            let showAllPosts = false;
 
             const params = new URLSearchParams(window.location.search);
             const initialQuery = params.get('q') || '';
@@ -189,16 +194,24 @@
                 throttleTimeout = setTimeout(doThrottledQuery, throttleDelay);
             });
 
-            showMoreButtonEl.addEventListener('click', () => {
-                showAll = true;
+            // "Show More" for subreddits
+            showMoreSubsButtonEl.addEventListener('click', () => {
+                showAllSubs = true;
                 renderResults();
-                showMoreContainerEl.style.display = 'none';
+                showMoreSubsContainerEl.style.display = 'none';
+            });
+
+            // "Show More" for posts
+            showMorePostsButtonEl.addEventListener('click', () => {
+                showAllPosts = true;
+                renderResults();
+                showMorePostsContainerEl.style.display = 'none';
             });
 
             function doThrottledQuery() {
                 const queryValue = inputEl.value.trim();
                 window.history.replaceState({}, '', '/?q=' + encodeURIComponent(queryValue));
-                hideAllSections();
+                hideAll();
 
                 if (!queryValue) {
                     showPlaceholder("Please enter a query to see results.");
@@ -223,57 +236,79 @@
             }
 
             function updateResults(data) {
-                // The new field in the response from index is `zillizResults`
+                // 'zillizResults' for subreddits, 'posts' for the new array
                 zillizResults = data.zillizResults || [];
-                showAll = false;
+                allPosts = data.posts || [];
+                showAllSubs = false;
+                showAllPosts = false;
 
-                if (!zillizResults.length) {
+                if (!zillizResults.length && !allPosts.length) {
                     showPlaceholder("No data found for that query.");
                     return;
                 }
-                renderResults();
 
-                // If you want "Show More" logic
-                const moreNeeded = zillizResults.length > 5;
-                showMoreContainerEl.style.display = moreNeeded ? 'block' : 'none';
+                renderResults();
             }
 
             function renderResults() {
-                hideAllSections();
-                if (!zillizResults.length) {
+                hideAll();
+                // If we have at least one of sub or post, show the main container
+                if (!zillizResults.length && !allPosts.length) {
                     showPlaceholder("No data found for that query.");
                     return;
                 }
+                resultsContainerEl.style.display = 'flex';
 
-                similarSubsSectionEl.style.display = 'block';
+                // 1) Render subreddits
+                if (zillizResults.length) {
+                    similarSubsSectionEl.style.display = 'block';
 
-                // Compute min, max, and range for distance-based progress bars
-                const minVal = Math.min(...zillizResults.map(s => s.distance));
-                const maxVal = Math.max(...zillizResults.map(s => s.distance));
-                const range = (maxVal - minVal) || 1;
+                    const subsToRender = showAllSubs ? zillizResults : zillizResults.slice(0, 5);
+                    similarSubsListEl.innerHTML = subsToRender
+                        .map((item, index) => {
+                            return `
+                                <li>
+                                    <strong>${index + 1}.</strong> 
+                                    <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
+                                </li>
+                            `;
+                        }).join('');
 
-                const itemsToRender = showAll ? zillizResults : zillizResults.slice(0, 5);
-                similarSubsListEl.innerHTML = itemsToRender.map(item => {
-                    const widthPercent = ((item.distance - minVal) / range * 100).toFixed(0);
-                    // Link to /r/<sub>
-                    return `
-                        <li>
-                            <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: ${widthPercent}%">
-                                    <span>Distance ${widthPercent}%</span>
-                                </div>
-                            </div>
-                        </li>
-                    `;
-                }).join('');
+                    const moreNeededSubs = zillizResults.length > 5;
+                    showMoreSubsContainerEl.style.display = moreNeededSubs ? 'block' : 'none';
+                }
+
+                // 2) Render posts
+                if (allPosts.length) {
+                    similarPostsSectionEl.style.display = 'block';
+
+                    const postsToRender = showAllPosts ? allPosts : allPosts.slice(0, 5);
+                    similarPostsListEl.innerHTML = postsToRender
+                        .map((item, index) => {
+                            return `
+                                <li>
+                                    <strong>${index + 1}.</strong> 
+                                    <a href="https://reddit.com/r/${item.sub}/comments/${item.post_id}" target="_blank">/r/${item.sub}</a><br>
+                                    <em>${item.title}</em>
+                                </li>
+                            `;
+                        }).join('');
+
+                    const moreNeededPosts = allPosts.length > 5;
+                    showMorePostsContainerEl.style.display = moreNeededPosts ? 'block' : 'none';
+                }
             }
 
-            function hideAllSections() {
+            function hideAll() {
                 placeholderEl.style.display = 'none';
                 errorEl.style.display = 'none';
+                resultsContainerEl.style.display = 'none';
                 similarSubsSectionEl.style.display = 'none';
                 similarSubsListEl.innerHTML = '';
+                showMoreSubsContainerEl.style.display = 'none';
+                similarPostsSectionEl.style.display = 'none';
+                similarPostsListEl.innerHTML = '';
+                showMorePostsContainerEl.style.display = 'none';
             }
 
             function showPlaceholder(message) {
@@ -296,5 +331,4 @@
         })();
     </script>
 </body>
-
 </html>
