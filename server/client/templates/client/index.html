@@ -115,13 +115,15 @@
             .results-container {
                 flex-direction: column;
                 align-items: center;
+                width: 100%;
+            }
+            .results-box {
+                width: 100%;
+                max-width: none;
+                margin-bottom: 20px;
             }
             li {
                 flex: 1 1 100%;
-            }
-            .results-box {
-                min-width: auto;
-                max-width: 100%;
             }
         }
     </style>
@@ -218,7 +220,6 @@
                     showPlaceholder("Please enter a query to see results.");
                     return;
                 }
-
                 showLoading();
                 fetch('/api/?q=' + encodeURIComponent(queryValue))
                     .then(res => {
