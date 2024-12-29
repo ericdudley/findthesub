@@ -53,18 +53,22 @@
             margin-bottom: 10px;
             font-size: 1.2em;
         }
+        /* Wrap lists responsively */
         ul {
             list-style-type: none;
             padding-left: 0;
             margin: 0 auto;
             text-align: left;
-            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         li {
+            flex: 1 1 calc(50% - 10px);
+            box-sizing: border-box;
             background: #fefefe;
-            margin-bottom: 5px;
-            padding: 8px;
             border: 1px solid #ccc;
+            padding: 8px;
         }
         .placeholder,
         .loading,
@@ -111,6 +115,9 @@
             .results-container {
                 flex-direction: column;
                 align-items: center;
+            }
+            li {
+                flex: 1 1 100%;
             }
         }
     </style>
