@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             background: #f6f7f8;
@@ -53,7 +54,6 @@
             margin-bottom: 10px;
             font-size: 1.2em;
         }
-        /* Wrap lists responsively */
         ul {
             list-style-type: none;
             padding-left: 0;
@@ -119,6 +119,10 @@
             li {
                 flex: 1 1 100%;
             }
+            .results-box {
+                min-width: auto;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -138,9 +142,7 @@
         <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
         <div id="errorIndicator" class="error" style="display:none;"></div>
 
-        <!-- Container that holds both subreddits and posts -->
         <div class="results-container" id="resultsContainer" style="display:none;">
-            <!-- Subreddits Section -->
             <div id="similarSubsSection" class="results-box" style="display:none;">
                 <h2>Similar subreddits</h2>
                 <ul id="similarSubsList"></ul>
@@ -148,8 +150,6 @@
                     <button id="showMoreSubsButton">Show More</button>
                 </div>
             </div>
-
-            <!-- Posts Section -->
             <div id="similarPostsSection" class="results-box" style="display:none;">
                 <h2>Similar posts</h2>
                 <ul id="similarPostsList"></ul>
@@ -169,23 +169,20 @@
             const placeholderEl = document.getElementById("placeholder");
             const loadingEl = document.getElementById("loadingIndicator");
             const errorEl = document.getElementById("errorIndicator");
-            
             const resultsContainerEl = document.getElementById("resultsContainer");
 
-            // Subreddits
             const similarSubsSectionEl = document.getElementById("similarSubsSection");
             const similarSubsListEl = document.getElementById("similarSubsList");
             const showMoreSubsButtonEl = document.getElementById("showMoreSubsButton");
             const showMoreSubsContainerEl = showMoreSubsButtonEl.parentElement;
 
-            // Posts
             const similarPostsSectionEl = document.getElementById("similarPostsSection");
             const similarPostsListEl = document.getElementById("similarPostsList");
             const showMorePostsButtonEl = document.getElementById("showMorePostsButton");
             const showMorePostsContainerEl = showMorePostsButtonEl.parentElement;
 
-            let zillizResults = [];     // For subreddits
-            let allPosts = [];          // For posts
+            let zillizResults = [];
+            let allPosts = [];
             let showAllSubs = false;
             let showAllPosts = false;
 
@@ -201,14 +198,11 @@
                 throttleTimeout = setTimeout(doThrottledQuery, throttleDelay);
             });
 
-            // "Show More" for subreddits
             showMoreSubsButtonEl.addEventListener('click', () => {
                 showAllSubs = true;
                 renderResults();
                 showMoreSubsContainerEl.style.display = 'none';
             });
-
-            // "Show More" for posts
             showMorePostsButtonEl.addEventListener('click', () => {
                 showAllPosts = true;
                 renderResults();
@@ -243,7 +237,6 @@
             }
 
             function updateResults(data) {
-                // 'zillizResults' for subreddits, 'posts' for the new array
                 zillizResults = data.zillizResults || [];
                 allPosts = data.posts || [];
                 showAllSubs = false;
@@ -253,54 +246,46 @@
                     showPlaceholder("No data found for that query.");
                     return;
                 }
-
                 renderResults();
             }
 
             function renderResults() {
                 hideAll();
-                // If we have at least one of sub or post, show the main container
                 if (!zillizResults.length && !allPosts.length) {
                     showPlaceholder("No data found for that query.");
                     return;
                 }
                 resultsContainerEl.style.display = 'flex';
 
-                // 1) Render subreddits
                 if (zillizResults.length) {
                     similarSubsSectionEl.style.display = 'block';
-
                     const subsToRender = showAllSubs ? zillizResults : zillizResults.slice(0, 5);
                     similarSubsListEl.innerHTML = subsToRender
                         .map((item, index) => {
                             return `
                                 <li>
-                                    <strong>${index + 1}.</strong> 
+                                    <strong>${index + 1}.</strong>
                                     <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
                                 </li>
                             `;
                         }).join('');
-
                     const moreNeededSubs = zillizResults.length > 5;
                     showMoreSubsContainerEl.style.display = moreNeededSubs ? 'block' : 'none';
                 }
 
-                // 2) Render posts
                 if (allPosts.length) {
                     similarPostsSectionEl.style.display = 'block';
-
                     const postsToRender = showAllPosts ? allPosts : allPosts.slice(0, 5);
                     similarPostsListEl.innerHTML = postsToRender
                         .map((item, index) => {
                             return `
                                 <li>
-                                    <strong>${index + 1}.</strong> 
+                                    <strong>${index + 1}.</strong>
                                     <a href="https://reddit.com/r/${item.sub}/comments/${item.post_id}" target="_blank">/r/${item.sub}</a><br>
                                     <em>${item.title}</em>
                                 </li>
                             `;
                         }).join('');
-
                     const moreNeededPosts = allPosts.length > 5;
                     showMorePostsContainerEl.style.display = moreNeededPosts ? 'block' : 'none';
                 }
