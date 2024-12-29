@@ -1,316 +1,350 @@
 {% load static %}
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>{{ title }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/ico" href="{% static 'favicon.ico' %}"/>
-    <style>
-        body {
-            background: #f6f7f8;
-            font-family: Verdana, sans-serif;
-            color: #1c1c1c;
-            margin: 0;
-            padding: 0;
-        }
-        .header {
-            background: #cee3f8;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header h1 {
-            margin: 0;
-            color: #1c1c1c;
-            font-size: 1.5em;
-        }
-        .buy-me-coffee {
-            margin-top: 10px;
-        }
-        .buy-me-coffee img {
-            height: 40px;
-            width: auto;
-        }
-        .container {
-            margin: 20px auto;
-            max-width: 800px;
-            background: #ffffff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            text-align: center;
-        }
-        input[type=text] {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            font-size: 1.1rem;
-        }
-        h2 {
-            margin-top: 30px;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin: 0 auto;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        li {
-            flex: 1 1 calc(50% - 10px);
-            box-sizing: border-box;
-            background: #fefefe;
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
-        .placeholder,
-        .loading,
-        .error {
-            color: #555;
-            font-style: italic;
-            margin-bottom: 10px;
-        }
-        .error {
-            color: red;
-            font-style: normal;
-        }
-        .results-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .results-box {
-            flex: 1 1 300px;
-            min-width: 300px;
-            max-width: 400px;
-            border: 1px solid #ccc;
-            background: #f6f7f8;
-            padding: 10px;
-        }
-        .results-box h2 {
-            text-align: center;
-        }
-        .show-more-container {
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" type="image/ico" href="{% static 'favicon.ico' %}" />
+  <style>
+    body {
+      background: #f6f7f8;
+      font-family: Verdana, sans-serif;
+      color: #1c1c1c;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: #cee3f8;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      margin: 0;
+      color: #1c1c1c;
+      font-size: 1.5em;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .buy-me-coffee {
+      margin-top: 10px;
+    }
+    .buy-me-coffee img {
+      height: 40px;
+      width: auto;
+    }
+    .container {
+      margin: 20px auto;
+      max-width: 800px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      text-align: center;
+    }
+    input[type=text] {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 1.1rem;
+    }
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0 auto;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    li {
+      flex: 1 1 calc(50% - 10px);
+      box-sizing: border-box;
+      background: #fefefe;
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    .placeholder,
+    .loading,
+    .error {
+      color: #555;
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: red;
+      font-style: normal;
+    }
+    .results-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .results-box {
+      flex: 1 1 300px;
+      min-width: 300px;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      background: #f6f7f8;
+      padding: 10px;
+    }
+    .results-box h2 {
+      text-align: center;
+    }
+    .show-more-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .logo {
+      height: 50px;
+      width: auto;
+    }
+  </style>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-PHKM3SSMZ1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() { dataLayer.push(arguments); }
   gtag('js', new Date());
-
   gtag('config', 'G-PHKM3SSMZ1');
 </script>
+
 <body>
-    <div class="header">
-        <h1>{{ title }}</h1>
-        <div class="buy-me-coffee">
-            <a href="https://www.buymeacoffee.com/ericdudley" target="_blank">
-                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" />
-            </a>
-        </div>
+  <div class="header">
+    <a class="logo-container" href="/">
+      <img class="logo" src="{% static 'logo.png' %}" alt="Logo" />
+      <h1>{{ title }}</h1>
+    </a>
+    <div class="buy-me-coffee">
+      <a href="https://www.buymeacoffee.com/ericdudley" target="_blank">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" />
+      </a>
     </div>
-    <div class="container">
-        <p>Enter a Reddit post title below, and we'll determine which subreddits are the best match.</p>
-        <input id="queryInput" type="text" placeholder="Why did I get laid off right before the holidays?" />
-        <div id="placeholder" class="placeholder">Please enter a query to see results.</div>
-        <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
-        <div id="errorIndicator" class="error" style="display:none;"></div>
+  </div>
+  <div class="container">
+    <p>Enter a Reddit post title below, and we'll determine which subreddits are the best match.</p>
+    <input id="queryInput" type="text" placeholder="Why did I get laid off right before the holidays?" />
+    <button id="shareButton">Share this query</button>
+    <p id="shareNotification" style="display:none; color:green;">URL copied to clipboard!</p>
 
-        <div class="results-container" id="resultsContainer" style="display:none;">
-            <div id="similarSubsSection" class="results-box" style="display:none;">
-                <h2>Similar subreddits</h2>
-                <ul id="similarSubsList"></ul>
-                <div class="show-more-container" style="display:none;">
-                    <button id="showMoreSubsButton">Show More</button>
-                </div>
-            </div>
-            <div id="similarPostsSection" class="results-box" style="display:none;">
-                <h2>Similar posts</h2>
-                <ul id="similarPostsList"></ul>
-                <div class="show-more-container" style="display:none;">
-                    <button id="showMorePostsButton">Show More</button>
-                </div>
-            </div>
+    <div id="placeholder" class="placeholder">Please enter a query to see results.</div>
+    <div id="loadingIndicator" class="loading" style="display:none;">Loading...</div>
+    <div id="errorIndicator" class="error" style="display:none;"></div>
+
+    <div class="results-container" id="resultsContainer" style="display:none;">
+      <div id="similarSubsSection" class="results-box" style="display:none;">
+        <h2>Similar subreddits</h2>
+        <ul id="similarSubsList"></ul>
+        <div class="show-more-container" style="display:none;">
+          <button id="showMoreSubsButton">Show More</button>
         </div>
+      </div>
+      <div id="similarPostsSection" class="results-box" style="display:none;">
+        <h2>Similar posts</h2>
+        <ul id="similarPostsList"></ul>
+        <div class="show-more-container" style="display:none;">
+          <button id="showMorePostsButton">Show More</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        (function () {
-            const throttleDelay = 500;
-            let throttleTimeout;
+  <script>
+    (function () {
+      const throttleDelay = 500;
+      let throttleTimeout;
 
-            const inputEl = document.getElementById("queryInput");
-            const placeholderEl = document.getElementById("placeholder");
-            const loadingEl = document.getElementById("loadingIndicator");
-            const errorEl = document.getElementById("errorIndicator");
-            const resultsContainerEl = document.getElementById("resultsContainer");
+      const inputEl = document.getElementById("queryInput");
+      const placeholderEl = document.getElementById("placeholder");
+      const loadingEl = document.getElementById("loadingIndicator");
+      const errorEl = document.getElementById("errorIndicator");
+      const resultsContainerEl = document.getElementById("resultsContainer");
 
-            const similarSubsSectionEl = document.getElementById("similarSubsSection");
-            const similarSubsListEl = document.getElementById("similarSubsList");
-            const showMoreSubsButtonEl = document.getElementById("showMoreSubsButton");
-            const showMoreSubsContainerEl = showMoreSubsButtonEl.parentElement;
+      const similarSubsSectionEl = document.getElementById("similarSubsSection");
+      const similarSubsListEl = document.getElementById("similarSubsList");
+      const showMoreSubsButtonEl = document.getElementById("showMoreSubsButton");
+      const showMoreSubsContainerEl = showMoreSubsButtonEl.parentElement;
 
-            const similarPostsSectionEl = document.getElementById("similarPostsSection");
-            const similarPostsListEl = document.getElementById("similarPostsList");
-            const showMorePostsButtonEl = document.getElementById("showMorePostsButton");
-            const showMorePostsContainerEl = showMorePostsButtonEl.parentElement;
+      const similarPostsSectionEl = document.getElementById("similarPostsSection");
+      const similarPostsListEl = document.getElementById("similarPostsList");
+      const showMorePostsButtonEl = document.getElementById("showMorePostsButton");
+      const showMorePostsContainerEl = showMorePostsButtonEl.parentElement;
 
-            let zillizResults = [];
-            let allPosts = [];
-            let showAllSubs = false;
-            let showAllPosts = false;
+      const shareButtonEl = document.getElementById("shareButton");
+      const shareNotificationEl = document.getElementById("shareNotification");
 
-            const params = new URLSearchParams(window.location.search);
-            const initialQuery = params.get('q') || '';
-            if (initialQuery) {
-                inputEl.value = initialQuery;
-                doThrottledQuery();
-            }
+      let zillizResults = [];
+      let allPosts = [];
+      let showAllSubs = false;
+      let showAllPosts = false;
 
-            inputEl.addEventListener("input", () => {
-                if (throttleTimeout) clearTimeout(throttleTimeout);
-                throttleTimeout = setTimeout(doThrottledQuery, throttleDelay);
-            });
+      // Read initial query from the URL
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get('q') || '';
+      if (initialQuery) {
+        inputEl.value = initialQuery;
+        doThrottledQuery();
+      }
 
-            showMoreSubsButtonEl.addEventListener('click', () => {
-                showAllSubs = true;
-                renderResults();
-                showMoreSubsContainerEl.style.display = 'none';
-            });
-            showMorePostsButtonEl.addEventListener('click', () => {
-                showAllPosts = true;
-                renderResults();
-                showMorePostsContainerEl.style.display = 'none';
-            });
+      // Throttle user input
+      inputEl.addEventListener("input", () => {
+        if (throttleTimeout) clearTimeout(throttleTimeout);
+        throttleTimeout = setTimeout(doThrottledQuery, throttleDelay);
+      });
 
-            function doThrottledQuery() {
-                const queryValue = inputEl.value.trim();
-                window.history.replaceState({}, '', '/?q=' + encodeURIComponent(queryValue));
-                hideAll();
+      showMoreSubsButtonEl.addEventListener('click', () => {
+        showAllSubs = true;
+        renderResults();
+        showMoreSubsContainerEl.style.display = 'none';
+      });
+      showMorePostsButtonEl.addEventListener('click', () => {
+        showAllPosts = true;
+        renderResults();
+        showMorePostsContainerEl.style.display = 'none';
+      });
 
-                if (!queryValue) {
-                    showPlaceholder("Please enter a query to see results.");
-                    return;
-                }
-                showLoading();
-                fetch('/api/?q=' + encodeURIComponent(queryValue))
-                    .then(res => {
-                        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-                        return res.json();
-                    })
-                    .then(data => {
-                        hideLoading();
-                        updateResults(data);
-                    })
-                    .catch(err => {
-                        hideLoading();
-                        showError(`Something went wrong: ${err.message}`);
-                        console.error('Error fetching /api/', err);
-                    });
-            }
+      // Share button: copy URL with current query to clipboard
+      shareButtonEl.addEventListener('click', () => {
+        const queryValue = inputEl.value.trim();
+        if (!queryValue) {
+          return;
+        }
+        const shareUrl = window.location.origin + '/?q=' + encodeURIComponent(queryValue);
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          shareNotificationEl.style.display = 'block';
+          setTimeout(() => {
+            shareNotificationEl.style.display = 'none';
+          }, 2000);
+        });
+      });
 
-            function updateResults(data) {
-                zillizResults = data.zillizResults || [];
-                allPosts = data.posts || [];
-                showAllSubs = false;
-                showAllPosts = false;
+      function doThrottledQuery() {
+        const queryValue = inputEl.value.trim();
+        window.history.replaceState({}, '', '/?q=' + encodeURIComponent(queryValue));
+        hideAll();
 
-                if (!zillizResults.length && !allPosts.length) {
-                    showPlaceholder("No data found for that query.");
-                    return;
-                }
-                renderResults();
-            }
+        if (!queryValue) {
+          showPlaceholder("Please enter a query to see results.");
+          return;
+        }
+        showLoading();
+        fetch('/api/?q=' + encodeURIComponent(queryValue))
+          .then(res => {
+            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+            return res.json();
+          })
+          .then(data => {
+            hideLoading();
+            updateResults(data);
+          })
+          .catch(err => {
+            hideLoading();
+            showError(`Something went wrong: ${err.message}`);
+            console.error('Error fetching /api/', err);
+          });
+      }
 
-            function renderResults() {
-                hideAll();
-                if (!zillizResults.length && !allPosts.length) {
-                    showPlaceholder("No data found for that query.");
-                    return;
-                }
-                resultsContainerEl.style.display = 'flex';
+      function updateResults(data) {
+        zillizResults = data.zillizResults || [];
+        allPosts = data.posts || [];
+        showAllSubs = false;
+        showAllPosts = false;
 
-                if (zillizResults.length) {
-                    similarSubsSectionEl.style.display = 'block';
-                    const subsToRender = showAllSubs ? zillizResults : zillizResults.slice(0, 5);
-                    similarSubsListEl.innerHTML = subsToRender
-                        .map((item, index) => {
-                            return `
-                                <li>
-                                    <strong>${index + 1}.</strong>
-                                    <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
-                                </li>
-                            `;
-                        }).join('');
-                    const moreNeededSubs = zillizResults.length > 5;
-                    showMoreSubsContainerEl.style.display = moreNeededSubs ? 'block' : 'none';
-                }
+        if (!zillizResults.length && !allPosts.length) {
+          showPlaceholder("No data found for that query.");
+          return;
+        }
+        renderResults();
+      }
 
-                if (allPosts.length) {
-                    similarPostsSectionEl.style.display = 'block';
-                    const postsToRender = showAllPosts ? allPosts : allPosts.slice(0, 5);
-                    similarPostsListEl.innerHTML = postsToRender
-                        .map((item, index) => {
-                            return `
-                                <li>
-                                    <strong>${index + 1}.</strong>
-                                    <a href="https://reddit.com/r/${item.sub}/comments/${item.post_id}" target="_blank">/r/${item.sub}</a><br>
-                                    <em>${item.title}</em>
-                                </li>
-                            `;
-                        }).join('');
-                    const moreNeededPosts = allPosts.length > 5;
-                    showMorePostsContainerEl.style.display = moreNeededPosts ? 'block' : 'none';
-                }
-            }
+      function renderResults() {
+        hideAll();
+        if (!zillizResults.length && !allPosts.length) {
+          showPlaceholder("No data found for that query.");
+          return;
+        }
+        resultsContainerEl.style.display = 'flex';
 
-            function hideAll() {
-                placeholderEl.style.display = 'none';
-                errorEl.style.display = 'none';
-                resultsContainerEl.style.display = 'none';
-                similarSubsSectionEl.style.display = 'none';
-                similarSubsListEl.innerHTML = '';
-                showMoreSubsContainerEl.style.display = 'none';
-                similarPostsSectionEl.style.display = 'none';
-                similarPostsListEl.innerHTML = '';
-                showMorePostsContainerEl.style.display = 'none';
-            }
+        if (zillizResults.length) {
+          similarSubsSectionEl.style.display = 'block';
+          const subsToRender = showAllSubs ? zillizResults : zillizResults.slice(0, 5);
+          similarSubsListEl.innerHTML = subsToRender
+            .map((item, index) => {
+              return `
+                <li>
+                  <strong>${index + 1}.</strong>
+                  <a href="https://reddit.com/r/${item.sub}" target="_blank">/r/${item.sub}</a>
+                </li>
+              `;
+            }).join('');
+          const moreNeededSubs = zillizResults.length > 5;
+          showMoreSubsContainerEl.style.display = moreNeededSubs ? 'block' : 'none';
+        }
 
-            function showPlaceholder(message) {
-                placeholderEl.textContent = message;
-                placeholderEl.style.display = 'block';
-            }
+        if (allPosts.length) {
+          similarPostsSectionEl.style.display = 'block';
+          const postsToRender = showAllPosts ? allPosts : allPosts.slice(0, 5);
+          similarPostsListEl.innerHTML = postsToRender
+            .map((item, index) => {
+              return `
+                <li>
+                  <strong>${index + 1}.</strong>
+                  <a href="https://reddit.com/r/${item.sub}/comments/${item.post_id}" target="_blank">/r/${item.sub}</a><br>
+                  <em>${item.title}</em>
+                </li>
+              `;
+            }).join('');
+          const moreNeededPosts = allPosts.length > 5;
+          showMorePostsContainerEl.style.display = moreNeededPosts ? 'block' : 'none';
+        }
+      }
 
-            function showLoading() {
-                loadingEl.style.display = 'block';
-            }
+      function hideAll() {
+        placeholderEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        resultsContainerEl.style.display = 'none';
+        similarSubsSectionEl.style.display = 'none';
+        similarSubsListEl.innerHTML = '';
+        showMoreSubsContainerEl.style.display = 'none';
+        similarPostsSectionEl.style.display = 'none';
+        similarPostsListEl.innerHTML = '';
+        showMorePostsContainerEl.style.display = 'none';
+      }
 
-            function hideLoading() {
-                loadingEl.style.display = 'none';
-            }
+      function showPlaceholder(message) {
+        placeholderEl.textContent = message;
+        placeholderEl.style.display = 'block';
+      }
 
-            function showError(message) {
-                errorEl.textContent = message;
-                errorEl.style.display = 'block';
-            }
-        })();
-    </script>
+      function showLoading() {
+        loadingEl.style.display = 'block';
+      }
+
+      function hideLoading() {
+        loadingEl.style.display = 'none';
+      }
+
+      function showError(message) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+      }
+    })();
+  </script>
 </body>
 </html>
